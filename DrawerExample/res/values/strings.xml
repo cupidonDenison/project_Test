@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">DrawerExample</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="drawer_open">Open Navigation Drawer</string>
+    <string name="drawer_close">Close Navigation Drawer</string>
+
+    <string-array name="planets">
+        <item>Mercury</item>
+        <item>Venus</item>
+        <item>Mars</item>
+    </string-array>
+
+    <string name="title_activity_second">SecondActivity</string>
+    <string name="first_activity">first Activity</string>
+    <string name="next_activity">Next Activity</string>
+    <string name="test">test</string>
+    <string name="title_activity_home">HomeActivity</string>
+
+</resources>

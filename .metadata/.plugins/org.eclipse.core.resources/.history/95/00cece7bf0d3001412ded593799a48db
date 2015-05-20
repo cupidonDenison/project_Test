@@ -1,0 +1,162 @@
+package googleCloudMessaging;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.os.AsyncTask;
+import android.util.Log;
+import android.widget.Toast;
+
+import com.example.track_me.SplashScreen;
+import com.example.track_me.VerificationActivity;
+import com.example.track_me.others.JSONParser;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.google.gson.JsonObject;
+
+public class GCMRegistration {
+	private static final String PROJECT_NUMBER ="609320741786";
+	private static AtomicInteger msgId = new AtomicInteger();
+	private Context context;
+	private String registrationID="";
+	GoogleCloudMessaging gcm;
+	String phoneNumber;
+	JSONParser parser;
+	Boolean registered = false;
+	JSONObject responseObject;
+	
+	private static final String REGISTRATION_URL= SplashScreen.SERVER_IP+"project/registerDevice.php";
+	public GCMRegistration(Context context,String number){
+		this.context = context;
+		phoneNumber = number;
+		parser = new JSONParser();
+		
+		Log.i("Gcm registration constructor", number);
+	}//end constructor
+	
+	
+	
+	public String getRegistrationID() {
+		
+		//new RegistrationInBackground().execute();
+		return registrationID;
+	}
+
+
+
+	public void setRegistrationID(String registrationID) {
+		this.registrationID = registrationID;
+	}
+
+
+
+	private boolean checkPlayServices(){
+		 int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(context);
+		    if (resultCode != ConnectionResult.SUCCESS) {
+		       
+		    	Toast.makeText(context, "Device not Supported", Toast.LENGTH_LONG).show();
+		        return false;
+		    }else{
+		    	Toast.makeText(context, "Play Services available", Toast.LENGTH_LONG).show();
+		    }
+		    return true;
+	}//End checkPlayServices
+	
+	public void RegisterPhone(){
+		new RegistrationInBackground().execute();
+	}
+	
+	class RegistrationInBackground extends AsyncTask<Void, Void, Void>{
+
+		
+		ProgressDialog dialog;
+		@Override
+		protected void onPreExecute() {
+			/*dialog = new ProgressDialog(getApplicationContext());
+			dialog.setMessage("Registering App");
+			dialog.setIndeterminate(false);
+			dialog.setCancelable(false);
+			dialog.show();
+			*/
+		}
+		@Override
+		protected Void doInBackground(Void... params) {
+			try{
+				if(gcm == null){
+					gcm = GoogleCloudMessaging.getInstance(context);
+				}
+				
+				if (gcm !=null){
+					Log.i("gcm background thread ","registering phone");
+				}
+				registrationID = gcm.register(PROJECT_NUMBER);
+				Log.i("Gcm registration id", registrationID);
+			}catch(Exception e){
+				Log.e("GCM registration error", "Error occur", e);
+			}
+			
+			return null;
+		}
+		@Override
+		protected void onPostExecute(Void result) {
+			//dialog.dismiss();
+			
+			
+			Log.i("Gcm registration id  ; ", registrationID);
+			
+			if(registrationID.length()>2){
+				new StoreRegistration().execute();
+			}
+			super.onPostExecute(result);
+		}
+		
+				
+	}//end asyncTask
+	
+	
+	
+	class StoreRegistration extends AsyncTask<Void, Void, Boolean>{
+
+		@Override
+		protected Boolean doInBackground(Void... arg0) {
+			
+			List<NameValuePair> params = new ArrayList<NameValuePair>();
+			params.add(new BasicNameValuePair("number", phoneNumber));
+			params.add(new BasicNameValuePair("registration_id", registrationID));
+			
+			responseObject = parser.makeHttpRequest(REGISTRATION_URL, "POST", params);
+			if(responseObject == null){
+				Log.i("Gcm registration response", "response null");
+			}
+			
+			try {
+				String status = responseObject.getString("status");
+				if(status.equals("ok"))
+					registered = true;
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			return registered;
+		}
+		@Override
+		protected void onPostExecute(Boolean registered) {
+			
+			if(registered){
+				new VerificationActivity().nextActivity();
+			}
+		}
+	}//End async task to store registrationId
+	
+
+}//End class

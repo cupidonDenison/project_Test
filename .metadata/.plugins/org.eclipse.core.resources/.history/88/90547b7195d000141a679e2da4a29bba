@@ -1,0 +1,119 @@
+package com.example.track_me;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
+
+import android.app.IntentService;
+import android.content.Context;
+import android.content.Intent;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.os.Bundle;
+import android.util.Log;
+
+import com.google.android.gms.maps.model.LatLng;
+
+public class UpdateLocationService extends IntentService implements LocationListener {
+	Location myLoc;
+	LocationManager locationManager;
+	String provider;
+	Criteria criteria;
+	LatLng myLatLng;
+	private static final String online_URl =SplashScreen.SERVER_IP+"project/test/friendLocationTest.php";
+
+	public UpdateLocationService() {
+		super("updateLocationService");
+		
+	}
+	
+	
+	@Override
+	public int onStartCommand(Intent intent, int flags, int startId) {
+		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		int index = 0;
+		String[] locationProvider = new String[] {
+				LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER };
+		do {
+			provider = locationProvider[index];
+			locationManager.requestLocationUpdates(provider, 2000, 10, this);
+
+			Log.i("update provider location ", provider);
+			myLoc = locationManager
+					.getLastKnownLocation(provider);
+
+			if (myLoc != null) {
+				double myLat = myLoc.getLatitude();
+				double myLon = myLoc.getLongitude();
+				// myLoc = loc.getLocation();
+				Log.i("updateLocation Location Current home activity location ", "" + myLat
+						+ ", " + myLon);
+
+				myLatLng = new LatLng(myLat, myLon);
+				locationManager.removeUpdates(this);
+				locationManager
+						.requestLocationUpdates(provider, 3000, 10, this);
+				sendMyLocation(myLat, myLon);
+			}
+
+			index++;
+		} while (myLoc == null);
+		return super.onStartCommand(intent, flags, startId);
+	}
+	
+	@Override
+	protected void onHandleIntent(Intent arg0) {
+		/*int i =0;
+		while(true){
+			
+			if(i == Integer.MAX_VALUE)
+				break;
+			Log.i("update service started", ""+i);
+			i++;
+			
+			
+		}*/
+	}
+
+	
+	private void sendMyLocation(double lat, double lng){
+		String number = SplashScreen.clientNumber;
+		
+	List<NameValuePair> params = new ArrayList<NameValuePair>();
+	params.add(new BasicNameValuePair("number", number));
+	params.add(new BasicNameValuePair("lat", lat+""));
+	params.add(new BasicNameValuePair("lng", lng+""));
+		
+	}
+	@Override
+	public void onLocationChanged(Location location) {
+	
+		Log.i("updateLocation onLocationChanged ", "" + location.getLatitude()
+				+ ", " + location.getLongitude());
+		
+		sendMyLocation(location.getLatitude(), location.getLongitude());
+	}
+
+	@Override
+	public void onProviderDisabled(String provider) {
+		
+		
+	}
+
+	@Override
+	public void onProviderEnabled(String provider) {
+		
+		
+	}
+
+	@Override
+	public void onStatusChanged(String provider, int status, Bundle extras) {
+	
+		
+	}
+
+}

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;Track-Me/res/drawable-hdpi/nearBy icon.png&apos; to &apos;near_by_icon.png&apos;" description="Rename resource &apos;nearBy icon.png&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="res/drawable-hdpi/nearBy icon.png" name="near_by_icon.png" stamp="1422041293296" updateReferences="true"/>
+</session>

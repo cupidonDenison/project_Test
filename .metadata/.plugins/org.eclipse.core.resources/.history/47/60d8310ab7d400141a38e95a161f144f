@@ -1,0 +1,83 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/pager"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/plouis" >
+
+    <ScrollView
+        android:id="@+id/scrollView1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="0dp"
+        android:layout_marginTop="0dp"
+        android:background="#88FFFFFF" >
+
+        <RelativeLayout
+            android:id="@+id/inner_scrollView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" >
+
+            <ImageView
+                android:id="@+id/imageView1"
+                android:layout_width="300dp"
+                android:layout_height="250dp"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="0dp"
+                android:contentDescription="@string/menu_detail_activity_contentDesc"
+                android:src="@drawable/placedetailplaceholder" />
+
+            <RatingBar
+                android:id="@+id/ratingBar1"
+                android:layout_width="200dp"
+                android:layout_height="50dp"
+                android:layout_alignLeft="@+id/imageView1"
+                android:layout_below="@+id/imageView1"
+                android:clickable="false"
+                android:isIndicator="true" />
+
+            <TextView
+                android:id="@+id/textView_menu_details_activity_placeName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@+id/ratingBar1"
+                android:layout_below="@+id/ratingBar1"
+                android:layout_marginLeft="7dp"
+                android:text="@string/menu_details_activity_placeName"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:textSize="@dimen/textView_menu_details_activity_placeName" />
+
+            <TextView
+                android:id="@+id/textView_menu_details_activity_address"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@+id/textView_menu_details_activity_placeName"
+                android:layout_below="@+id/textView_menu_details_activity_placeName"
+                android:layout_marginTop="14dp"
+                android:text="@string/menu_details_activity_address"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
+
+            <Button
+                android:id="@+id/button_menu_detail_activity"
+                android:layout_width="match_parent"
+                android:enabled="false"
+                android:layout_height="@dimen/getLocationButton"
+                android:layout_alignParentBottom="true"
+                android:layout_below="@+id/textView_menu_details_activity_address"
+                android:layout_centerHorizontal="true"
+                android:text="@string/menu_detail_activity_button" />
+
+            <TextView
+                android:id="@+id/textView_menu_details_activity_distance"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/ratingBar1"
+                android:layout_alignRight="@+id/imageView1"
+                android:layout_marginBottom="14dp"
+                android:text="@string/menu_detail_activity_distance"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        </RelativeLayout>
+    </ScrollView>
+
+</RelativeLayout>

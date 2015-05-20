@@ -1,0 +1,361 @@
+package com.example.track_me;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import com.example.track_me.entity.Place;
+import com.example.track_me.others.CustomList;
+import com.example.track_me.others.JSONParser;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.gson.Gson;
+
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ListView;
+import android.widget.Toast;
+import android.widget.AdapterView.OnItemClickListener;
+
+public class FragmentNearby extends Fragment implements LocationListener {
+
+	private String type = "all";
+	ListView nearbyPlaces;
+	ProgressDialog pDialog;
+	Location myLoc;
+	private static final String placesURL = SplashScreen.SERVER_IP
+			+ "project/getPlacesType.php";
+
+	LocationManager locationManager;
+
+	LatLng myLatLng, placeLatLng;
+	String provider;
+	Criteria criteria = new Criteria();
+	static int responseCount;
+	JSONObject responseObj;
+	boolean connectionOK;
+	Bitmap place2Image;
+	JSONParser parser = new JSONParser();
+	Exception error;
+	public static List<Place> placesList = new ArrayList<Place>();
+
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container,
+			Bundle savedInstanceState) {
+
+		View rootView = inflater.inflate(R.layout.fragment_nearby, container,
+				false);
+		nearbyPlaces = (ListView) rootView
+				.findViewById(R.id.listView_nearby_places);
+		locationManager = (LocationManager) getActivity().getSystemService(
+				Context.LOCATION_SERVICE);
+
+		
+		int index = 0;
+		provider = this.locationManager.getBestProvider(criteria, true);
+		String[] locationProvider = new String[] {
+				LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER };
+		do {
+			locationManager.requestLocationUpdates(provider, 2000, 10, this);
+
+			Log.i("provider ", locationProvider[index]);
+
+			myLoc = locationManager
+					.getLastKnownLocation(locationProvider[index]);
+			// myLoc = locationManager.getLastKnownLocation(
+			// LocationManager.NETWORK_PROVIDER);
+
+			nearbyPlaces.setOnItemClickListener(new OnItemClickListener() {
+				@Override
+				public void onItemClick(AdapterView<?> a, View v, int position,
+						long id) {
+					Object o = nearbyPlaces.getItemAtPosition(position);
+					Place obj_itemDetails = (Place) o;
+					String myGson = new Gson().toJson(obj_itemDetails);
+
+					Intent intent = new Intent(getActivity(),
+							MenuDetailsActivity.class);
+					intent.putExtra("selectedPlace", myGson);
+					startActivity(intent);
+
+				}
+			});
+			if (myLoc != null) {
+				double myLat = myLoc.getLatitude();
+				double myLon = myLoc.getLongitude();
+				// myLoc = loc.getLocation();
+				Log.i("Location Current home activity location ", "" + myLat
+						+ ", " + myLon);
+
+				myLatLng = new LatLng(myLat, myLon);
+				locationManager.removeUpdates(this);
+				locationManager
+						.requestLocationUpdates(provider, 2000, 10, this);
+			}
+
+			index++;
+		} while (myLoc == null);
+
+		locationManager.removeUpdates(this);
+		
+			
+		return rootView;
+	}// End onCreateVew
+
+	public void getPlaces() {
+		new places().execute();
+	}// End getPalces()
+
+	public boolean isOnline() {
+		ConnectivityManager cm = (ConnectivityManager) getActivity()
+				.getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo netInfo = cm.getActiveNetworkInfo();
+		return netInfo != null && netInfo.isConnectedOrConnecting();
+	}
+
+	private void loadAllPlaces(){
+		new places().execute();
+	}
+	class places extends AsyncTask<Void, Void, Void> {
+
+		@Override
+		protected void onPreExecute() {
+			pDialog = new ProgressDialog(getActivity());
+			pDialog.setMessage("Loading " + type + " nearby places.....");
+			pDialog.setIndeterminate(false);
+			pDialog.setCancelable(false);
+			pDialog.show();
+		}// end onPreExcute()
+
+		@Override
+		protected Void doInBackground(Void... arg0) {
+
+			try {
+				List<NameValuePair> params = new ArrayList<NameValuePair>();
+				params.add(new BasicNameValuePair("type", type));
+				params.add(new BasicNameValuePair("startLat", myLoc
+						.getLatitude() + ""));
+				params.add(new BasicNameValuePair("startLong", myLoc
+						.getLongitude() + ""));
+
+				Log.i("my location : ", "startLat " + myLoc.getLatitude() + " "
+						+ "startLong " + myLoc.getLongitude());
+				responseObj = parser.makeHttpRequest(placesURL, "POST", params);
+
+				try {
+					if (isOnline()) {
+						Log.i("Response Type", type);
+						Log.i("Response object", responseObj.toString());
+
+						responseCount = responseObj.getInt("count");
+						String responseStatus = responseObj.getString("status");
+
+						Log.i("Response status : ", responseStatus);
+
+						Log.i("response count", String.valueOf(responseCount));
+						if (responseCount > 0) {
+							JSONArray placesArray = responseObj
+									.getJSONArray("places");
+
+							connectionOK = true;
+							try {
+								for (int i = 0; i < responseCount; i++) {
+									JSONObject obj = placesArray
+											.getJSONObject(i);
+
+									String id = obj.getString("place_id");
+									String icon = obj.getString("icon");
+									String name = obj.getString("name");
+									double latitude = obj.getDouble("latitude");
+									double longitude = obj
+											.getDouble("longitude");
+
+									JSONArray typeArray = obj.getJSONArray(
+											"types").getJSONArray(0);
+
+									Log.i("response types",
+											typeArray.toString());
+
+									ArrayList<String> typesArrayList = new ArrayList<String>();
+
+									for (int j = 0; j < typeArray.length(); j++) {
+										String placeType = typeArray
+												.getString(j);
+
+										if (!(placeType.equals("establishment"))) {
+											typesArrayList.add(placeType);
+											// Log.i("Response type",
+											// placeType);
+											// Log.i("Response type list size",
+											// typesArrayList.size()+"");
+										}
+									}// end for loop
+
+									Log.i("Response out of type loop", "out");
+									Place newPlace = new Place(id, type, name,
+											icon, latitude, longitude);
+
+									newPlace.setTypes(typesArrayList);
+									// get place image from server
+
+									String imageURL = newPlace.getIcon();
+
+									Bitmap image = parser.getImage(imageURL);
+									if (image == null)
+										Log.i("response image", "image is null");
+
+									newPlace.setImage(image);
+									LatLng currentLatLng = new LatLng(latitude,
+											longitude);
+
+									List<NameValuePair> pr = new ArrayList<NameValuePair>();
+
+									pr.add(new BasicNameValuePair("startLat",
+											myLoc.getLatitude() + ""));
+									pr.add(new BasicNameValuePair("startLong",
+											myLoc.getLongitude() + ""));
+									pr.add(new BasicNameValuePair("endLat",
+											latitude + ""));
+									pr.add(new BasicNameValuePair("endLong",
+											longitude + ""));
+
+									JSONObject object = parser
+											.makeHttpRequest(
+													SplashScreen.SERVER_IP
+															+ "project/getLocationDetails.php",
+													"POST", pr);
+									// JSONObject object =
+									// parser.makeHttpRequest("http://192.168.137.1/project/getLocationDetails.php","POST",
+									// pr);
+									Log.i("Current location",
+											myLoc.getLatitude() + " ,"
+													+ myLoc.getLongitude());
+
+									String dist = object.getString("distance");
+
+									newPlace.setDistance(Double.parseDouble(String.format(
+											"%.2f",
+											Double.parseDouble(dist) / 1000)));
+
+									// newPlace.setImage(image);
+
+									placesList.add(newPlace);
+
+								}// end loop in placeArray
+							} catch (Exception e) {
+								connectionOK = false;
+
+							}
+
+						}// End if statement if no data corresponding to type is
+							// found
+							// in database
+
+					}// end if error in connection
+
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}// end try-catch statement
+
+			} catch (Exception e) {
+				connectionOK = false;
+				error = e;
+			}
+			return null;
+		}// end doInBackground()
+
+		@Override
+		protected void onPostExecute(Void result) {
+			pDialog.dismiss();
+			if (connectionOK) {
+
+				if (placesList.size() > 0) {
+
+					for (Place place : placesList) {
+						double placelat = place.getLatitude();
+						double placelon = place.getLongitude();
+
+						placeLatLng = new LatLng(placelat, placelat);
+
+						Location placeLoc = new Location("");
+						placeLoc.setLatitude(placelat);
+						placeLoc.setLongitude(placelon);
+
+						// double distance = (myLoc.distanceTo(placeLoc)) /
+						// 1000;
+						// String dist = String.format("%.2f", distance);
+
+						// distance = Double.parseDouble(dist);
+						// place.setDistance(distance);
+
+					}// end for loop
+
+					nearbyPlaces.setAdapter(new CustomList(getActivity(),
+							placesList, locationManager));
+					locationManager.removeUpdates(FragmentNearby.this);
+				} else {
+					Toast.makeText(getActivity().getApplicationContext(),
+							"No result found for : " + type, Toast.LENGTH_LONG)
+							.show();
+				}// No REcord
+
+			}// End if statement if no data corresponding to type is found in
+				// database
+			else {
+				// Log.e("Response error ", "response error occur", error);
+				Toast.makeText(getActivity().getApplicationContext(),
+						"Unable to connect to Server ", Toast.LENGTH_LONG)
+						.show();
+
+			}// end else check for connection
+
+			responseObj = null;
+		}// end onPostExecute()
+
+	}// end AsyncTask
+
+	@Override
+	public void onLocationChanged(Location location) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onProviderDisabled(String provider) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onProviderEnabled(String provider) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onStatusChanged(String provider, int status, Bundle extras) {
+		// TODO Auto-generated method stub
+
+	}
+
+}// End class

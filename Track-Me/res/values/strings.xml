@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Track-Me</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_drawer">Menu</string>
+
+    <string-array name="items">
+        <item>Home</item>
+        <item>Nearby</item>
+        <item>Location</item>
+        <item>Profile</item>
+        <item>Favorites</item>
+        <item>Emergency</item>
+        <item>Help</item>
+        <item>Exit</item>
+    </string-array>
+
+    <string name="peopleLabel">Friends : </string>
+    <string name="drawer_open">Open Navigation Drawer</string>
+    <string name="drawer_close">Close Navigation Drawer</string>
+    <string name="title_activity_splash_screen">Splash Screen</string>
+    <string name="title_activity_menu_details">Place Details</string>
+    <string name="title_activity_menu">Places</string>
+    <string name="itemName">Name</string>
+    <string name="itemLocation">Location</string>
+    <string name="title_activity_start_up">Verify your phone number</string>
+    <string name="startUp_msg">We will send an SMS Message to verify your phone number.</string>
+    <string name="phone_confirm">Please confirm your phone number</string>
+    <string name="btnOk">OK</string>
+    <string name="warning">SMS Charges May apply</string>
+    <string name="title_activity_verification">SMS Verification</string>
+    <string name="next">Next</string>
+    <string name="label1">An SMS has been sent to your Phone Number for verification.</string>
+    <string name="label2">Please enter the code received in the textbox below to continue.</string>
+    <string name="label3">Enter Code Here :</string>
+    <string name="lblName">Enter your Name :</string>
+    <string name="home">Home</string>
+    <string name="title_activity_home">Home</string>
+    <string name="title_activity_profile">Edit Profile</string>
+    <string name="editMessage">My Profile</string>
+    <string name="title_activity_location">My Location</string>
+    <string name="homeLoc">Set Home Location</string>
+    <string name="nrmal">Normal</string>
+    <string name="sat">Satellite</string>
+    <string name="title_activity_main_menu">Main Menu</string>
+    <string name="title_activity_emergency">Emergency Listings</string>
+    <string name="title_activity_test">TestActivity</string>
+    <string name="title_activity_people">Friends</string>
+    <string name="txtUser">Username</string>
+    <string name="refresh">Refresh</string>
+    <string name="title_activity_friend_detail"></string>
+    <string name="menu_details_activity_placeName">Place Name</string>
+    <string name="menu_details_activity_address">Address</string>
+    <string name="menu_detail_activity_contentDesc">image view</string>
+     <string name="menu_detail_activity_distance">distance</string>
+     <string name="menu_detail_activity_button">Find Place</string>
+
+</resources>

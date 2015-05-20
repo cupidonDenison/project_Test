@@ -1,0 +1,123 @@
+package com.example.track_me.others;
+
+import java.util.ArrayList;
+
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+
+import com.example.track_me.entity.Contact;
+
+public class DatabaseHandler extends SQLiteOpenHelper {
+	
+	private static final String DATABASE_NAME = "trackMeDB";
+	private static final int DATABASE_VERSION = 1;
+	private static final String TABLE_NAME = "activation_table";
+	private static final String FRIEND_TABLE = "friend_table";
+	
+	private static final String COLUMN_PHONE_NUM = "phone_number";
+	private static final String COLUMN_STATUS = "status";
+	
+	private static final String COLUMN_FRIEND_NUMBER = "friend_number";
+	private static final String COLUMN_FRIEND_NAME = "friend_name";
+	private static final String COLUMN_FRIEND_PIC = "friend_pic";
+	
+	public DatabaseHandler(Context context){
+		super(context,DATABASE_NAME,null,DATABASE_VERSION);
+	}//end constructor
+
+	@Override
+	public void onCreate(SQLiteDatabase db) {
+		
+		String createTable = "CREATE TABLE "+TABLE_NAME+"("+COLUMN_PHONE_NUM+" TEXT PRIMARY KEY,"+COLUMN_STATUS+" INTEGER)";
+		String createFriendTable = "CREATE TABLE "+FRIEND_TABLE +"("+COLUMN_FRIEND_NUMBER+" TEXT PRIMARY KEY,"+COLUMN_FRIEND_NAME+" TEXT,"+COLUMN_FRIEND_PIC+" TEXT)";
+		db.execSQL(createFriendTable);
+		db.execSQL(createTable);
+	}//end onCreate
+
+	@Override
+	public void onUpgrade(SQLiteDatabase db, int arg1, int arg2) {
+		db.execSQL("DROP TABLE IF EXISTS" + TABLE_NAME);
+
+	}//End onUpgrade
+	
+	public int checkActivation(String number){
+		int result = -1;
+		SQLiteDatabase db = this.getWritableDatabase();
+		
+		String select_query = "SELECT * FROM "+TABLE_NAME+ " WHERE "+COLUMN_PHONE_NUM+" =  '"+number+"' AND "+COLUMN_STATUS+" = 1";
+		//String select_query = "SELECT * FROM "+TABLE_NAME;
+		//String select_query = "SELECT * FROM "+TABLE_NAME+ " WHERE "+COLUMN_PHONE_NUM+" =  '"+number+"'";
+		Cursor cursor = db.rawQuery(select_query, null);
+		
+		
+		result = cursor.getCount();
+		String res ="";
+		if(result >0){
+			cursor.moveToNext();
+			res = cursor.getString(1);
+		}
+		
+		db.close();
+		return result;
+	}//End checkActivation()
+	
+	public void setActivation(String number,int status){
+		
+		SQLiteDatabase db = this.getWritableDatabase();
+		
+		String updateStr = "UPDATE "+TABLE_NAME+ " SET "+COLUMN_STATUS+ " = "+ status +" WHERE "+COLUMN_PHONE_NUM+ " ='"+number+"'";
+		
+		db.execSQL(updateStr);
+		
+		db.close();
+		
+	}//End setActivation
+	
+	public void createRecord(String number){
+		SQLiteDatabase db = this.getWritableDatabase();
+		
+		ContentValues values = new ContentValues();
+		values.put(COLUMN_PHONE_NUM, number);
+		values.put(COLUMN_STATUS, 1);
+		
+		db.insert(TABLE_NAME, null, values);
+		
+		db.close();
+	}//End createRecord()
+	
+	//----------------------------------------------Friend table methods----------------------------------------------
+	
+	public long addFriend(Contact contact){
+		SQLiteDatabase db = getWritableDatabase();
+		
+		ContentValues value =  new ContentValues();
+		value.put(COLUMN_FRIEND_NUMBER, contact.getPhoneNumber());
+		value.put(COLUMN_FRIEND_NAME, contact.getName());
+		value.put(COLUMN_FRIEND_PIC, contact.getPictureLocation());
+		
+		return db.insert(FRIEND_TABLE, null, value);
+	}
+	
+	public ArrayList<Contact> getAllFriends(){
+		ArrayList<Contact> allFriends = new ArrayList<Contact>();
+		SQLiteDatabase db = getReadableDatabase();
+		String selectQuery = "SELECT * FROM "+FRIEND_TABLE;
+		
+		Cursor c = db.rawQuery(selectQuery, null);
+		if(c.moveToFirst()){
+			while(c.moveToNext()){
+				Contact contact = new Contact();
+				contact.setName(c.getString(c.getColumnIndex(COLUMN_FRIEND_NAME)));
+				contact.setPhoneNumber(c.getString(c.getColumnIndex(COLUMN_FRIEND_NUMBER)));
+				contact.setPictureLocation(c.getString(c.getColumnIndex(COLUMN_FRIEND_PIC)));
+				
+				allFriends.add(contact);
+			}
+		}
+		return allFriends;
+	}
+
+}//End class DatabaseHandler

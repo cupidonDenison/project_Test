@@ -1,0 +1,104 @@
+package com.example.gcmexample;
+
+import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.util.Log;
+import android.widget.TextView;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.gcm.GoogleCloudMessaging;
+
+public class MainActivity extends Activity {
+
+	public static final String EXTRA_MESSAGE = "message";
+    public static final String PROPERTY_REG_ID = "registration_id";
+    private static final String PROPERTY_APP_VERSION = "appVersion";
+    private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
+
+	TextView myLabel;
+	Context myContext;
+	String registrationID;
+	GoogleCloudMessaging gcm;
+	
+	String SENDER_ID ="609320741786";
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
+		myLabel = (TextView) findViewById(R.id.myLabel);
+		
+		myContext = getApplicationContext();
+		checkPlayServices();
+		
+		if(checkPlayServices()){
+			 gcm = GoogleCloudMessaging.getInstance(this);
+	            
+		}//end if statement
+		
+		new RegistrationInBackground().execute();
+		
+	}//End onCreate()
+
+	
+	//check if google play services is available
+	private boolean checkPlayServices() {
+	    int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
+	    if (resultCode != ConnectionResult.SUCCESS) {
+	        if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
+	            GooglePlayServicesUtil.getErrorDialog(resultCode, this,
+	                    PLAY_SERVICES_RESOLUTION_REQUEST).show();
+	        } else {
+	            Log.i("GMS", "This device is not supported.");
+	            finish();
+	        }
+	        return false;
+	    }else{
+	    	myLabel.setText("Google play services available");
+	    }
+	    return true;
+	}//End checkPlayServices
+	
+	class RegistrationInBackground extends AsyncTask<Void, Void, Void>{
+
+		ProgressDialog dialog;
+		@Override
+		protected void onPreExecute() {
+			dialog = new ProgressDialog(myContext);
+			dialog.setMessage("Registering App");
+			dialog.setIndeterminate(false);
+			dialog.setCancelable(false);
+			dialog.show();
+			
+		}
+		@Override
+		protected Void doInBackground(Void... params) {
+			try{
+				if(gcm == null){
+					gcm = GoogleCloudMessaging.getInstance(myContext);
+				}
+				
+				registrationID = gcm.register(SENDER_ID);
+			}catch(Exception e){
+				Log.e("GCM registration error", "Error occur", e);
+			}
+			
+			return null;
+		}
+		@Override
+		protected void onPostExecute(Void result) {
+			dialog.dismiss();
+			myLabel.setText("Registration Id = "+registrationID);
+			super.onPostExecute(result);
+		}
+		
+	}//end asyncTask
+	
+	
+	
+
+}

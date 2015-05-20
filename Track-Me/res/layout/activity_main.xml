@@ -1,0 +1,23 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+   android:background="@drawable/plouis"
+    tools:context="com.example.track_me.MainActivity" >
+
+    <GridView
+        android:id="@+id/gridView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:numColumns="auto_fit"
+        android:background="#88BDBDBD"
+        android:horizontalSpacing="5dp"
+        android:verticalSpacing="5dp"
+        android:columnWidth ="100dp"
+        android:stretchMode="spacingWidthUniform"
+        android:gravity="center_horizontal" >
+    </GridView>
+
+</RelativeLayout>

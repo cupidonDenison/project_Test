@@ -1,0 +1,134 @@
+package googleCloudMessaging;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONObject;
+
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.os.AsyncTask;
+import android.util.Log;
+import android.widget.Toast;
+
+import com.example.track_me.SplashScreen;
+import com.example.track_me.others.JSONParser;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.google.gson.JsonObject;
+
+public class GCMRegistration {
+	private static final String PROJECT_NUMBER ="609320741786";
+	private static AtomicInteger msgId = new AtomicInteger();
+	private Context context;
+	private String registrationID="";
+	GoogleCloudMessaging gcm;
+	String phoneNumber;
+	JSONParser parser;
+	boolean registered = false;
+	JSONObject responseObject;
+	
+	private static final String REGISTRATION_URL= SplashScreen.SERVER_IP+"project/registerDevice.php";
+	public GCMRegistration(Context context,String number){
+		this.context = context;
+		phoneNumber = number;
+		
+		parser = new JSONParser();
+	}//end constructor
+	
+	
+	
+	public String getRegistrationID() {
+		
+		//new RegistrationInBackground().execute();
+		return registrationID;
+	}
+
+
+
+	public void setRegistrationID(String registrationID) {
+		this.registrationID = registrationID;
+	}
+
+
+
+	private boolean checkPlayServices(){
+		 int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(context);
+		    if (resultCode != ConnectionResult.SUCCESS) {
+		       
+		    	Toast.makeText(context, "Device not Supported", Toast.LENGTH_LONG).show();
+		        return false;
+		    }
+		    return true;
+	}//End checkPlayServices
+	
+	
+	class RegistrationInBackground extends AsyncTask<Void, Void, Void>{
+
+		
+		ProgressDialog dialog;
+		@Override
+		protected void onPreExecute() {
+			/*dialog = new ProgressDialog(getApplicationContext());
+			dialog.setMessage("Registering App");
+			dialog.setIndeterminate(false);
+			dialog.setCancelable(false);
+			dialog.show();
+			*/
+		}
+		@Override
+		protected Void doInBackground(Void... params) {
+			try{
+				if(gcm == null){
+					gcm = GoogleCloudMessaging.getInstance(context);
+				}
+				
+				registrationID = gcm.register(PROJECT_NUMBER);
+			}catch(Exception e){
+				Log.e("GCM registration error", "Error occur", e);
+			}
+			
+			return null;
+		}
+		@Override
+		protected void onPostExecute(Void result) {
+			//dialog.dismiss();
+			
+			
+			Log.i("Gcm registration id  ; ", registrationID);
+			
+			if(registrationID.length()>2){
+				new StoreRegistration().execute();
+			}
+			super.onPostExecute(result);
+		}
+		
+				
+	}//end asyncTask
+	
+	class StoreRegistration extends AsyncTask<Void, Void, Void>{
+
+		@Override
+		protected Void doInBackground(Void... arg0) {
+			
+			List<NameValuePair> params = new ArrayList<NameValuePair>();
+			params.add(new BasicNameValuePair("number", phoneNumber));
+			params.add(new BasicNameValuePair("registration_id", registrationID));
+			
+			parser.makeHttpRequest(REGISTRATION_URL, "POST", params);
+			
+			return null;
+		}
+		@Override
+		protected void onPostExecute(Void result) {
+			
+			super.onPostExecute(result);
+		}
+	}//End async task to store registrationId
+	
+
+}//End class

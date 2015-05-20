@@ -1,0 +1,129 @@
+package com.example.track_me;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.TreeMap;
+
+import org.apache.http.NameValuePair;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ListView;
+
+import com.example.track_me.entity.Contact;
+import com.example.track_me.entity.Friends;
+import com.example.track_me.others.DatabaseHandler;
+import com.example.track_me.others.JSONParser;
+
+
+public class FragmentFriends extends Fragment {
+ 
+	ListView nearbyFriendList;
+	ArrayList<Friends> onlineFriends = new ArrayList<Friends>();
+	ArrayList<Contact> allFirends = new ArrayList<Contact>();
+	TreeMap<String,Contact> onlineMap = new TreeMap<String, Contact>();
+	JSONParser parser;
+	JSONObject responseObj;
+	String myNumber;
+	int countOnlineFriends;
+	private static final String NEAR_FRIENDS_URL = SplashScreen.SERVER_IP+"project/onlineFriends.php";
+	
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+            Bundle savedInstanceState) {
+ 
+        View rootView = inflater.inflate(R.layout.activity_people, container, false);
+         nearbyFriendList = (ListView) rootView.findViewById(R.id.peopleList);
+         DatabaseHandler db = new DatabaseHandler(getActivity());
+     	Log.i("Friends Count",""+db.getAllFriends().size());
+     	allFirends = db.getAllFriends();
+     	parser = new JSONParser();
+     	
+     	SharedPreferences pref = getActivity().getSharedPreferences("number",
+				Context.MODE_PRIVATE);
+
+     	myNumber = pref.getString("phone", "default value");
+     	
+     	
+     	
+     	
+     	new OnlineFriends().execute();
+     	
+        return rootView;
+    }
+    
+    private void populateNearbyList(){
+    	
+    }//End populateNearbyList()
+    
+    class OnlineFriends extends AsyncTask<Void, Void, Void>{
+
+		@Override
+		protected Void doInBackground(Void... arg0) {
+			
+			List<NameValuePair> params = new ArrayList<NameValuePair>();
+			
+			
+
+				JSONObject obj = new JSONObject();
+				JSONArray jArray = new JSONArray();
+				
+				
+				try {		
+					obj.put("myNumber", myNumber);
+					for(Contact contact : allFirends){
+						JSONObject tempObj = new JSONObject();
+						tempObj.put("number", contact.getPhoneNumber());
+						jArray.put(tempObj);
+					
+					}
+					obj.put("friends", jArray);
+					
+					responseObj =  parser.postJSON(NEAR_FRIENDS_URL	, obj);	
+					
+					//Get number of friends online
+					countOnlineFriends = responseObj.getInt("count");
+					JSONArray friendsArray = responseObj.getJSONArray("friends");
+					for(int i =0; i<countOnlineFriends;i++){
+						JSONObject tempObj = friendsArray.getJSONObject(i);
+						String num = tempObj.getString("number");
+						double lat = tempObj.getDouble("lat");
+						double lng = tempObj.getDouble("lng");
+						double distance = tempObj.getDouble("distance");
+						
+						Log.e("Friend information",num+", "+lat+", "+lng+", "+distance+" m");
+						
+						Friends tempFriend = new Friends(num,);
+						
+					}//End for loop to create arrayList of online friends
+					
+				} catch (JSONException e) {
+					 Log.e("Friend post error upload", "error sending contacts", e);			
+				}	//End try-catch
+				//Log.i("Friends Nearby json post",obj.toString());
+				Log.i("Friends Nearby response object",responseObj.toString());
+				
+			
+				
+			
+			return null;
+		}
+    	
+		@Override
+		protected void onPostExecute(Void result) {
+			// TODO Auto-generated method stub
+			super.onPostExecute(result);
+		}//end onPostExecute
+    }//end AsyncTask
+    
+}//End class

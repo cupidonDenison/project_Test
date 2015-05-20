@@ -1,0 +1,61 @@
+package com.example.gcmexample;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.gcm.GoogleCloudMessaging;
+
+import android.app.Activity;
+import android.content.Context;
+import android.os.Bundle;
+import android.util.Log;
+import android.widget.TextView;
+
+public class MainActivity extends Activity {
+
+	private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
+	TextView myLabel;
+	Context myContext;
+	String registrationID;
+	GoogleCloudMessaging gcm;
+	String registrationID;
+	
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
+		myLabel = (TextView) findViewById(R.id.myLabel);
+		
+		myContext = getApplicationContext();
+		checkPlayServices();
+		
+		if(checkPlayServices()){
+			 gcm = GoogleCloudMessaging.getInstance(this);
+	            
+		}//end if statement
+		
+		
+	}//End onCreate()
+
+	
+	//check if google play services is available
+	private boolean checkPlayServices() {
+	    int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
+	    if (resultCode != ConnectionResult.SUCCESS) {
+	        if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
+	            GooglePlayServicesUtil.getErrorDialog(resultCode, this,
+	                    PLAY_SERVICES_RESOLUTION_REQUEST).show();
+	        } else {
+	            Log.i("GMS", "This device is not supported.");
+	            finish();
+	        }
+	        return false;
+	    }else{
+	    	myLabel.setText("Google play services available");
+	    }
+	    return true;
+	}
+	
+	
+	
+
+}
